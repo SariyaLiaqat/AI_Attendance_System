@@ -1,0 +1,464 @@
+
+// import 'package:flutter/material.dart';
+// import 'package:flutter/services.dart';
+// import 'package:mobile_scanner/mobile_scanner.dart';
+// import 'package:image_picker/image_picker.dart';
+// import '../services/api_service.dart';
+// import '../models/student_model.dart';
+
+// class MarkAttendancePage2 extends StatefulWidget {
+//   @override
+//   _MarkAttendancePageState createState() => _MarkAttendancePageState();
+// }
+
+// class _MarkAttendancePageState extends State<MarkAttendancePage2> {
+//   final MobileScannerController scannerController = MobileScannerController();
+//   final ImagePicker _picker = ImagePicker();
+
+//   bool _isProcessing = false;
+//   String _statusMessage = "Step 1: Scan QR or Pick Gallery Image";
+//   Student? _detectedStudent;
+
+//   @override
+//   void dispose() {
+//     scannerController.dispose();
+//     super.dispose();
+//   }
+
+//   void _resetScanner() {
+//     if (!mounted) return;
+//     setState(() {
+//       _detectedStudent = null;
+//       _isProcessing = false;
+//       _statusMessage = "Step 1: Scan QR or Pick Gallery Image";
+//     });
+//     scannerController.start();
+//   }
+
+//   // --- 1. THE CORE LOGIC (USED BY BOTH CAMERA & GALLERY) ---
+//   void _processStudentAttendance(String rawCode) async {
+//     if (_isProcessing && _detectedStudent != null) return;
+
+//     setState(() {
+//       _isProcessing = true;
+//       _statusMessage = "🔍 Processing Roll: $rawCode...";
+//     });
+
+//     try {
+//       // Format the code to match your DB JSON structure
+//       String dbFormattedRoll = rawCode;
+//       print("🌐 Calling API for: $dbFormattedRoll");
+
+//       // Stop camera while processing
+//       await scannerController.stop();
+
+//       Student? student = await ApiService.getStudentByRoll(dbFormattedRoll);
+
+//       if (!mounted) return;
+
+//       if (student != null) {
+//         setState(() {
+//           _detectedStudent = student;
+//           _statusMessage = "✅ Found: ${student.name}";
+//         });
+
+//         bool marked = await ApiService.markPresent(student.id!);
+//         if (marked) {
+//           _showSuccessDialog(student.name);
+//         } else {
+//           setState(() {
+//             _isProcessing = false;
+//             _statusMessage = "⚠️ Database update failed";
+//           });
+//         }
+//       } else {
+//         print("❌ Student not found for $dbFormattedRoll");
+//         setState(() {
+//           _isProcessing = false;
+//           _statusMessage = "❌ Roll $rawCode not found";
+//         });
+//         Future.delayed(Duration(seconds: 2), () => _resetScanner());
+//       }
+//     } catch (e) {
+//       print("🚨 Error: $e");
+//       setState(() {
+//         _isProcessing = false;
+//         _statusMessage = "⚠️ Connection Error";
+//       });
+//       Future.delayed(Duration(seconds: 2), () => _resetScanner());
+//     }
+//   }
+
+//   // --- 2. CAMERA DETECTION ---
+//   void _onDetect(BarcodeCapture capture) {
+//     final String? code = capture.barcodes.first.rawValue?.trim();
+//     if (code != null && !_isProcessing) {
+//       HapticFeedback.mediumImpact();
+//       _processStudentAttendance(code);
+//     }
+//   }
+
+//   // --- 3. GALLERY PICKER ---
+//   Future<void> _pickQRFromGallery() async {
+//     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+//     if (image == null) return;
+
+//     setState(() {
+//       _isProcessing = true;
+//       _statusMessage = "🎯 Analyzing Gallery Image...";
+//     });
+
+//     try {
+//       final BarcodeCapture? capture = await scannerController.analyzeImage(
+//         image.path,
+//       );
+
+//       if (capture != null && capture.barcodes.isNotEmpty) {
+//         final String? code = capture.barcodes.first.rawValue?.trim();
+//         if (code != null) {
+//           _processStudentAttendance(code);
+//         }
+//       } else {
+//         setState(() {
+//           _isProcessing = false;
+//           _statusMessage = "❌ No QR code found in image";
+//         });
+//       }
+//     } catch (e) {
+//       setState(() {
+//         _isProcessing = false;
+//         _statusMessage = "❌ Error analyzing image";
+//       });
+//     }
+//   }
+
+//   void _showSuccessDialog(String name) {
+//     showDialog(
+//       context: context,
+//       barrierDismissible: false,
+//       builder: (ctx) => AlertDialog(
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+//         title: Icon(Icons.check_circle, color: Colors.green, size: 80),
+//         content: Text(
+//           "Success!\nAttendance Marked for\n$name",
+//           textAlign: TextAlign.center,
+//           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//         ),
+//         actions: [
+//           Center(
+//             child: ElevatedButton(
+//               onPressed: () {
+//                 Navigator.pop(ctx);
+//                 _resetScanner();
+//               },
+//               child: Text("Done"),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: Colors.grey[100],
+//       appBar: AppBar(
+//         title: Text("Smart Attendance"),
+//         backgroundColor: Colors.cyan[700],
+//         foregroundColor: Colors.white,
+//       ),
+//       body: Column(
+//         children: [
+//           Expanded(
+//             flex: 3,
+//             child: Stack(
+//               children: [
+//                 MobileScanner(
+//                   controller: scannerController,
+//                   onDetect: _onDetect,
+//                 ),
+//                 Center(
+//                   child: Container(
+//                     width: 240,
+//                     height: 240,
+//                     decoration: BoxDecoration(
+//                       border: Border.all(
+//                         color: _detectedStudent == null
+//                             ? Colors.white
+//                             : Colors.greenAccent,
+//                         width: 4,
+//                       ),
+//                       borderRadius: BorderRadius.circular(24),
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//           Expanded(
+//             flex: 2,
+//             child: Container(
+//               padding: EdgeInsets.all(24),
+//               decoration: BoxDecoration(
+//                 color: Colors.white,
+//                 borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+//               ),
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   if (_isProcessing) CircularProgressIndicator(),
+//                   SizedBox(height: 10),
+//                   Text(
+//                     _statusMessage,
+//                     textAlign: TextAlign.center,
+//                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+//                   ),
+//                   if (_detectedStudent == null && !_isProcessing) ...[
+//                     SizedBox(height: 20),
+//                     ElevatedButton.icon(
+//                       onPressed: _pickQRFromGallery,
+//                       icon: Icon(Icons.image),
+//                       label: Text("Pick Image from Gallery"),
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: Colors.cyan[700],
+//                         foregroundColor: Colors.white,
+//                         minimumSize: Size(250, 50),
+//                       ),
+//                     ),
+//                   ],
+//                 ],
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+////////////////////////////////////////////////
+///
+///
+///
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:image_picker/image_picker.dart';
+import '../services/api_service.dart';
+import '../models/student_model.dart';
+import '../services/face_embedding_service.dart'; // Import service
+import 'camera_capture_page.dart'; // Import face scan page
+
+class MarkAttendancePage2 extends StatefulWidget {
+  @override
+  _MarkAttendancePageState createState() => _MarkAttendancePageState();
+}
+
+class _MarkAttendancePageState extends State<MarkAttendancePage2> {
+  final MobileScannerController scannerController = MobileScannerController();
+  final ImagePicker _picker = ImagePicker();
+  final FaceEmbeddingService _embeddingService = FaceEmbeddingService(); // Initialize service
+
+  bool _isProcessing = false;
+  String _statusMessage = "Step 1: Scan QR or Pick Gallery Image";
+  Student? _detectedStudent;
+
+  @override
+  void initState() {
+    super.initState();
+    _embeddingService.loadModel(); // Load the face model
+  }
+
+  @override
+  void dispose() {
+    scannerController.dispose();
+    super.dispose();
+  }
+
+  void _resetScanner() {
+    if (!mounted) return;
+    setState(() {
+      _detectedStudent = null;
+      _isProcessing = false;
+      _statusMessage = "Step 1: Scan QR or Pick Gallery Image";
+    });
+    scannerController.start();
+  }
+
+  // --- THE CORE LOGIC (ENHANCED WITH FACE VERIFICATION) ---
+  void _processStudentAttendance(String rawCode) async {
+    if (_isProcessing && _detectedStudent != null) return;
+
+    setState(() {
+      _isProcessing = true;
+      _statusMessage = "🔍 Processing Roll: $rawCode...";
+    });
+
+    try {
+      String dbFormattedRoll = rawCode;
+      print("🌐 Calling API for: $dbFormattedRoll");
+
+      await scannerController.stop();
+
+      Student? student = await ApiService.getStudentByRoll(dbFormattedRoll);
+
+      if (!mounted) return;
+
+      if (student != null) {
+        setState(() {
+          _detectedStudent = student;
+          _statusMessage = "✅ Found: ${student.name}\nStep 2: Face Scan...";
+        });
+
+        // --- BRIDGE TO FACE VERIFICATION ---
+        final List<double>? liveEmbedding = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => CameraCapturePage()),
+        );
+
+        if (liveEmbedding == null) {
+          _handleError("⚠️ Face scan cancelled");
+          return;
+        }
+
+        // Compare the face from camera with the one in DB
+        double distance = _embeddingService.compareFaces(liveEmbedding, student.faceEmbedding!);
+        
+        if (distance < 0.75) { // Match found!
+          bool marked = await ApiService.markPresent(student.id!);
+          if (marked) {
+            _showSuccessDialog(student.name);
+          } else {
+            _handleError("⚠️ Database update failed");
+          }
+        } else {
+          _handleError("❌ Face mismatch! Try again.");
+        }
+      } else {
+        _handleError("❌ Roll $rawCode not found");
+      }
+    } catch (e) {
+      _handleError("⚠️ Connection Error");
+    }
+  }
+
+  // Helper to reset state on errors
+  void _handleError(String message) {
+    if (!mounted) return;
+    setState(() {
+      _isProcessing = false;
+      _statusMessage = message;
+    });
+    Future.delayed(Duration(seconds: 2), () => _resetScanner());
+  }
+
+  void _onDetect(BarcodeCapture capture) {
+    final String? code = capture.barcodes.first.rawValue?.trim();
+    if (code != null && !_isProcessing) {
+      HapticFeedback.mediumImpact();
+      _processStudentAttendance(code);
+    }
+  }
+
+  Future<void> _pickQRFromGallery() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+
+    setState(() {
+      _isProcessing = true;
+      _statusMessage = "🎯 Analyzing Gallery Image...";
+    });
+
+    try {
+      final BarcodeCapture? capture = await scannerController.analyzeImage(image.path);
+      if (capture != null && capture.barcodes.isNotEmpty) {
+        final String? code = capture.barcodes.first.rawValue?.trim();
+        if (code != null) _processStudentAttendance(code);
+      } else {
+        _handleError("❌ No QR code found");
+      }
+    } catch (e) {
+      _handleError("❌ Error analyzing image");
+    }
+  }
+
+  void _showSuccessDialog(String name) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Icon(Icons.check_circle, color: Colors.green, size: 80),
+        content: Text("Success!\n$name marked present", textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        actions: [
+          Center(child: ElevatedButton(onPressed: () { Navigator.pop(ctx); _resetScanner(); }, child: Text("Done")))
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(title: Text("Smart Attendance"), backgroundColor: Colors.cyan[700], foregroundColor: Colors.white),
+      body: Column(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Stack(
+              children: [
+                MobileScanner(controller: scannerController, onDetect: _onDetect),
+                Center(
+                  child: Container(
+                    width: 240, height: 240,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: _detectedStudent == null ? Colors.white : Colors.greenAccent, width: 4),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Container(
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isProcessing) CircularProgressIndicator(),
+                  SizedBox(height: 10),
+                  Text(_statusMessage, textAlign: TextAlign.center, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  if (_detectedStudent == null && !_isProcessing) ...[
+                    SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: _pickQRFromGallery,
+                      icon: Icon(Icons.image),
+                      label: Text("Pick Image from Gallery"),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan[700], foregroundColor: Colors.white, minimumSize: Size(250, 50)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+
+
