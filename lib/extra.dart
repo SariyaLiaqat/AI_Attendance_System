@@ -1,303 +1,231 @@
-// 🎯 FINAL SYSTEM GOAL (Sir ko explain karne ke liye)
+// 📱 Flutter App (Android / iOS)
 
-// Student registration ke sath system automatically student card generate karega (with QR code).
-// Attendance ke time camera QR + face dono verify karega.
-// Dono match huay → attendance mark.
+// 🌐 Flutter Web (Desktop / Tablet)
 
-// 🧱 CURRENT STATUS (tumhara system – ✅ already strong)
+// 👩‍🎓 Students
 
-// ✔ Student register hota hai
-// ✔ Roll number DB mein hai
-// ✔ Face embedding save ho rahi hai
-// ✔ Manual roll-number + face verification button perfect kaam kar raha hai
+// 👨‍🏫 Teachers
 
-// ➡️ Iska matlab 70% kaam already ho chuka hai
-// Ab sirf QR + Card layer add karni hai.
+// sab ke liye suitable ho.
 
-// 🛣️ ROADMAP (STEP BY STEP – NO CONFUSION)
-// 🔵 PHASE 1 — QR CODE SYSTEM (Day 1)
-// STEP 1.1 — Decide QR content
+// 🎨 GLOBAL DESIGN SYSTEM (APP + WEB)
+// 🎯 Color Palette (AI + Education)
 
-// QR ke andar sirf ek cheez hogi:
+// Use limited, clean colors — zyada colors = unprofessional.
 
-// ROLL_NUMBER   (or STUDENT_ID)
+// Purpose	Color
+// Primary	#0FB9B1 (Teal/Cyan)
+// Background	#F6F8FA
+// Card	#FFFFFF
+// Success	#2ECC71
+// Error	#E74C3C
+// Text Primary	#2D3436
+// Text Secondary	#636E72
 
+// 👉 Same colors app & web dono mein.
 
-// 📌 Simple
-// 📌 Fast
-// 📌 Reliable
+// 🧩 TYPOGRAPHY
 
-// STEP 1.2 — QR Code Generate (on registration)
+// App: Poppins / Inter
 
-// Student jab register ho:
+// Web: Inter
 
-// Roll number already mil raha hai
+// Sizes:
 
-// Us roll number se:
+// Title: 20–24
 
-// QR code generate karo
+// Section: 16–18
 
-// Save it (image / base64)
+// Body: 14–16
 
-// Flutter packages:
+// 📱 APP UX FLOW (MOBILE)
+// 1️⃣ Student Registration Screen
+// UX Goals:
 
-// qr_flutter (generate)
+// Calm
 
-// mobile_scanner (scan)
+// Step-by-step
 
-// ✔ Easy
-// ✔ Stable
+// No confusion
 
-// 🔵 PHASE 2 — AUTO CARD GENERATION (Day 2)
-// STEP 2.1 — Card Layout Design
+// Layout:
+// [ AppBar: New Student ]
 
-// Sir ko yeh format batao 👇
+// [ 👤 Student Details Card ]
+// - Name
+// - Roll No
+// - Parent Email
 
-// Student Card:
+// [ 📸 Capture Face ]
+// ✔ Face captured
 
-// Student Name
+// [ Submit Registration ]
 
-// Roll Number
+// UI Tips:
 
-// Department / Class
+// Form inside Card
 
-// Photo (optional)
+// Capture Face button = outlined
 
-// QR Code (right side / back)
+// After capture → green check + disable button
 
-// 📌 Simple ID card jaisa
-// 📌 No fancy design needed for demo
+// 2️⃣ Camera Capture Screen
+// UX Rules:
 
-// STEP 2.2 — Card Auto-Generate
+// User should not think
 
-// Registration ke baad system:
+// Overlay UI:
 
-// Card UI generate kare
+// Face guide box (rounded)
 
-// Convert to:
+// Text:
 
-// PDF / Image
+// “Look straight”
 
-// Print → student ko de do
+// “Distance: 40–60 cm”
 
-// ✔ YES, auto possible
-// ✔ Flutter se ho jata hai
+// Border:
 
-// 🔵 PHASE 3 — ATTENDANCE FLOW (Day 3)
-// STEP 3.1 — Camera Attendance Screen
+// White → No face
 
-// Ek single screen:
+// Green → Face detected
 
-// Camera ON
+// 3️⃣ Student QR Card Screen
+// UX:
 
-// Do checks:
-// 1️⃣ QR scan
-// 2️⃣ Face detect
+// Looks like official ID
 
-// STEP 3.2 — Logic Flow (IMPORTANT)
-// QR scanned → roll number mil gaya
-// ↓
-// DB se student fetch
-// ↓
-// Camera se face capture
-// ↓
-// Face embedding compare
-// ↓
-// MATCH?
-//   YES → Attendance MARK
-//   NO  → Error message
+// Card Design:
 
+// Institute logo (top)
 
-// 📌 Manual roll-number wala button ab remove / hide
-// 📌 Fully automatic system
+// Student Name (bold)
 
-// 🔵 PHASE 4 — FINAL POLISH (Day 4)
-// STEP 4.1 — UX Safety
+// Roll No
 
-// QR pehle scan ho
+// QR code
 
-// Phir face scan
+// Gradient border
 
-// Success animation / sound
+// Actions:
 
-// STEP 4.2 — Edge cases
+// Save to Gallery
 
-// QR scan fail → retry
+// Share (optional)
 
-// Face mismatch → warning
+// 4️⃣ Attendance Screen (BEST PART)
+// UX Flow:
 
-// Duplicate attendance → block
+// Scan QR
 
-// 🔵 PHASE 5 — DEMO PREP (Day 5)
+// Verify Face
 
-// Sir ke liye demo:
+// Success
 
-// 1️⃣ Dummy student register
-// 2️⃣ Card auto-generate
-// 3️⃣ Print (even black & white ok)
-// 4️⃣ Student wears card
-// 5️⃣ Camera scan → attendance marked
+// UI:
 
-// 🎉 DONE
+// Dark background for camera
 
-// ❓ Important Questions (tumhari anxiety ka jawab)
-// ❓ Card galay mein hoga, camera dono scan karega?
+// Status text:
 
-// ✔ YES
-// Camera QR + face dono read kar sakta hai
-// (ek after another)
+// “Scanning QR…”
 
-// ❓ QR ke bina possible?
+// “Verifying Face…”
 
-// ❌ NO
-// Plain text camera se reliable nahi hota
-// QR must hai
+// “Marked Present ✅”
 
-// ❓ Sir jo bol rahe hain realistic hai?
+// After success:
 
-// ✔ 100%
-// Yeh industry-standard attendance system hai
+// Big green check
 
-/////////////////////
+// Auto reset after 2 sec
 
-// 🎯 FINAL SYSTEM GOAL (to explain to the professor)
+// 🌐 FLUTTER WEB UX (DESKTOP + TABLET)
+// 🧭 Web Layout Structure
+// | Sidebar | Main Content |
 
-// When a student registers, the system automatically generates a student card (with a QR code).
-// During attendance, the camera verifies BOTH QR + face.
-// If both match → attendance is marked.
+// Sidebar:
 
-// 🧱 CURRENT STATUS (your system – ✅ already strong)
+// Dashboard
 
-// ✔ Student registration is working
-// ✔ Roll number is saved in the database
-// ✔ Face embeddings are saved
-// ✔ Manual roll-number + face verification button works perfectly
+// Register Student
 
-// ➡️ This means 70% of the system is already done
-// Now we only need to add the QR + Card layer.
+// Attendance
 
-// 🛣️ ROADMAP (STEP BY STEP – NO CONFUSION)
+// Reports
 
-// 🔵 PHASE 1 — QR CODE SYSTEM (Day 1)
+// 1️⃣ Web Registration Page
+// Layout:
+// [ Student Form ]   [ Live Camera Preview ]
 
-// STEP 1.1 — Decide QR content
-// The QR code will contain only one thing:
 
-// ROLL_NUMBER (or STUDENT_ID)
+// Rules:
 
-// 📌 Simple
-// 📌 Fast
-// 📌 Reliable
+// Camera opens on button click
 
-// STEP 1.2 — Generate QR Code (on registration)
+// Instructions always visible
 
-// When a student registers:
+// 2️⃣ Web Attendance Page
+// Layout:
+// [ QR Scanner ]   [ Camera Face Scan ]
 
-// Roll number is already available
-// From that roll number:
 
-// Generate a QR code
-// Save it (as image / base64)
+// Bigger scanning area
 
-// Flutter packages:
+// Clear step indicators
 
-// qr_flutter (for generation)
-// mobile_scanner (for scanning)
+// 3️⃣ Responsive Rules (IMPORTANT)
+// 📱 Mobile:
 
-// ✔ Easy
-// ✔ Stable
+// Column layout
 
-// 🔵 PHASE 2 — AUTO CARD GENERATION (Day 2)
+// Full width buttons
 
-// STEP 2.1 — Card Layout Design
-// Format to show to the professor:
+// 💻 Desktop:
 
-// Student Card:
+// Row layout
 
-// - Student Name
-// - Roll Number
-// - Department / Class
-// - Photo (optional)
-// - QR Code (right side or back)
+// Max width 1200px
 
-// 📌 Simple ID card style
-// 📌 No fancy design needed for demo
+// Centered content
 
-// STEP 2.2 — Auto-Generate Card
+// 🧠 UX PRINCIPLES YOU ARE FOLLOWING
 
-// After registration, the system:
+// Sir ko bata sakti ho:
 
-// - Generates the Card UI
-// - Converts it to PDF / Image
-// - Print → give to student
+// Minimal steps
 
-// ✔ YES, fully automatic
-// ✔ Flutter can handle this
+// Clear instructions
 
-// 🔵 PHASE 3 — ATTENDANCE FLOW (Day 3)
+// Error prevention
 
-// STEP 3.1 — Camera Attendance Screen
+// Feedback on every action
 
-// Single screen:
+// 🔧 Flutter Implementation Tips
+// Use:
 
-// - Camera ON
-// - Two checks:
-//   1️⃣ QR scan
-//   2️⃣ Face detection
+// LayoutBuilder
 
-// STEP 3.2 — Logic Flow (IMPORTANT)
+// MediaQuery
 
-// QR scanned → roll number obtained
-// ↓
-// Fetch student from DB
-// ↓
-// Capture face from camera
-// ↓
-// Compare face embedding
-// ↓
-// MATCH?
-//   YES → Mark attendance
-//   NO  → Show error
+// Wrap for web
 
-// 📌 Remove / hide manual roll-number button
-// 📌 Fully automatic system
+// Flexible / Expanded
 
-// 🔵 PHASE 4 — FINAL POLISH (Day 4)
+// Example:
+// bool isWeb = kIsWeb;
+// bool isMobile = MediaQuery.of(context).size.width < 600;
 
-// STEP 4.1 — UX Safety
+// 🎓 FINAL PRODUCT FEEL
 
-// - Scan QR first
-// - Then scan face
-// - Success animation / sound
+// Tumhara system feel karega:
 
-// STEP 4.2 — Handle Edge Cases
+// ✅ Professional
 
-// - QR scan fail → retry
-// - Face mismatch → warning
-// - Duplicate attendance → block
+// ✅ Trustworthy
 
-// 🔵 PHASE 5 — DEMO PREP (Day 5)
+// ✅ Easy for students
 
-// Demo for professor:
+// ✅ Teacher-friendly
 
-// 1️⃣ Register dummy student
-// 2️⃣ Auto-generate card
-// 3️⃣ Print card (even black & white is fine)
-// 4️⃣ Student wears card
-// 5️⃣ Camera scans → attendance marked
-
-// 🎉 DONE
-
-// ❓ Important Questions (answering your anxiety)
-
-// ❓ Will the card on the neck be scanned by camera?
-// ✔ YES
-// Camera can read QR + face (one after another)
-
-// ❓ Is it possible without QR?
-// ❌ NO
-// Plain text is not reliably readable by camera, QR is required
-
-// ❓ Is what the professor says realistic?
-// ✔ 100%
-// This is an industry-standard attendance system
+// ✅ Viva-proof

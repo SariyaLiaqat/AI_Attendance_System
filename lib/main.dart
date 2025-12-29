@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'pages/student_form_page.dart';
-
+//import 'pages/student_form_page.dart';
+import 'pages/dashboard_page.dart';
 void main() {
   runApp(MyApp());
 }
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: StudentFormPage(), // ✅ Start with Student Enrollment Form
+      home: AttendanceDashboard(), // ✅ Start with Student Enrollment Form
     );
   }
 }

@@ -1,10 +1,11 @@
-
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:mobile_scanner/mobile_scanner.dart';
 // import 'package:image_picker/image_picker.dart';
 // import '../services/api_service.dart';
 // import '../models/student_model.dart';
+// import '../services/face_embedding_service.dart'; // Import service
+// import 'camera_capture_page.dart'; // Import face scan page
 
 // class MarkAttendancePage2 extends StatefulWidget {
 //   @override
@@ -14,10 +15,17 @@
 // class _MarkAttendancePageState extends State<MarkAttendancePage2> {
 //   final MobileScannerController scannerController = MobileScannerController();
 //   final ImagePicker _picker = ImagePicker();
+//   final FaceEmbeddingService _embeddingService = FaceEmbeddingService(); // Initialize service
 
 //   bool _isProcessing = false;
 //   String _statusMessage = "Step 1: Scan QR or Pick Gallery Image";
 //   Student? _detectedStudent;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _embeddingService.loadModel(); // Load the face model
+//   }
 
 //   @override
 //   void dispose() {
@@ -35,7 +43,7 @@
 //     scannerController.start();
 //   }
 
-//   // --- 1. THE CORE LOGIC (USED BY BOTH CAMERA & GALLERY) ---
+//   // --- THE CORE LOGIC (ENHANCED WITH FACE VERIFICATION) ---
 //   void _processStudentAttendance(String rawCode) async {
 //     if (_isProcessing && _detectedStudent != null) return;
 
@@ -45,11 +53,9 @@
 //     });
 
 //     try {
-//       // Format the code to match your DB JSON structure
 //       String dbFormattedRoll = rawCode;
 //       print("🌐 Calling API for: $dbFormattedRoll");
 
-//       // Stop camera while processing
 //       await scannerController.stop();
 
 //       Student? student = await ApiService.getStudentByRoll(dbFormattedRoll);
@@ -59,37 +65,51 @@
 //       if (student != null) {
 //         setState(() {
 //           _detectedStudent = student;
-//           _statusMessage = "✅ Found: ${student.name}";
+//           _statusMessage = "✅ Found: ${student.name}\nStep 2: Face Scan...";
 //         });
 
-//         bool marked = await ApiService.markPresent(student.id!);
-//         if (marked) {
-//           _showSuccessDialog(student.name);
+//         // --- BRIDGE TO FACE VERIFICATION ---
+//         final List<double>? liveEmbedding = await Navigator.push(
+//           context,
+//           MaterialPageRoute(builder: (_) => CameraCapturePage()),
+//         );
+
+//         if (liveEmbedding == null) {
+//           _handleError("⚠️ Face scan cancelled");
+//           return;
+//         }
+
+//         // Compare the face from camera with the one in DB
+//         double distance = _embeddingService.compareFaces(liveEmbedding, student.faceEmbedding!);
+
+//         if (distance < 0.75) { // Match found!
+//           bool marked = await ApiService.markPresent(student.id!);
+//           if (marked) {
+//             _showSuccessDialog(student.name);
+//           } else {
+//             _handleError("⚠️ Database update failed");
+//           }
 //         } else {
-//           setState(() {
-//             _isProcessing = false;
-//             _statusMessage = "⚠️ Database update failed";
-//           });
+//           _handleError("❌ Face mismatch! Try again.");
 //         }
 //       } else {
-//         print("❌ Student not found for $dbFormattedRoll");
-//         setState(() {
-//           _isProcessing = false;
-//           _statusMessage = "❌ Roll $rawCode not found";
-//         });
-//         Future.delayed(Duration(seconds: 2), () => _resetScanner());
+//         _handleError("❌ Roll $rawCode not found");
 //       }
 //     } catch (e) {
-//       print("🚨 Error: $e");
-//       setState(() {
-//         _isProcessing = false;
-//         _statusMessage = "⚠️ Connection Error";
-//       });
-//       Future.delayed(Duration(seconds: 2), () => _resetScanner());
+//       _handleError("⚠️ Connection Error");
 //     }
 //   }
 
-//   // --- 2. CAMERA DETECTION ---
+//   // Helper to reset state on errors
+//   void _handleError(String message) {
+//     if (!mounted) return;
+//     setState(() {
+//       _isProcessing = false;
+//       _statusMessage = message;
+//     });
+//     Future.delayed(Duration(seconds: 2), () => _resetScanner());
+//   }
+
 //   void _onDetect(BarcodeCapture capture) {
 //     final String? code = capture.barcodes.first.rawValue?.trim();
 //     if (code != null && !_isProcessing) {
@@ -98,7 +118,6 @@
 //     }
 //   }
 
-//   // --- 3. GALLERY PICKER ---
 //   Future<void> _pickQRFromGallery() async {
 //     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 //     if (image == null) return;
@@ -109,26 +128,15 @@
 //     });
 
 //     try {
-//       final BarcodeCapture? capture = await scannerController.analyzeImage(
-//         image.path,
-//       );
-
+//       final BarcodeCapture? capture = await scannerController.analyzeImage(image.path);
 //       if (capture != null && capture.barcodes.isNotEmpty) {
 //         final String? code = capture.barcodes.first.rawValue?.trim();
-//         if (code != null) {
-//           _processStudentAttendance(code);
-//         }
+//         if (code != null) _processStudentAttendance(code);
 //       } else {
-//         setState(() {
-//           _isProcessing = false;
-//           _statusMessage = "❌ No QR code found in image";
-//         });
+//         _handleError("❌ No QR code found");
 //       }
 //     } catch (e) {
-//       setState(() {
-//         _isProcessing = false;
-//         _statusMessage = "❌ Error analyzing image";
-//       });
+//       _handleError("❌ Error analyzing image");
 //     }
 //   }
 
@@ -139,21 +147,9 @@
 //       builder: (ctx) => AlertDialog(
 //         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
 //         title: Icon(Icons.check_circle, color: Colors.green, size: 80),
-//         content: Text(
-//           "Success!\nAttendance Marked for\n$name",
-//           textAlign: TextAlign.center,
-//           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-//         ),
+//         content: Text("Success!\n$name marked present", textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
 //         actions: [
-//           Center(
-//             child: ElevatedButton(
-//               onPressed: () {
-//                 Navigator.pop(ctx);
-//                 _resetScanner();
-//               },
-//               child: Text("Done"),
-//             ),
-//           ),
+//           Center(child: ElevatedButton(onPressed: () { Navigator.pop(ctx); _resetScanner(); }, child: Text("Done")))
 //         ],
 //       ),
 //     );
@@ -163,32 +159,19 @@
 //   Widget build(BuildContext context) {
 //     return Scaffold(
 //       backgroundColor: Colors.grey[100],
-//       appBar: AppBar(
-//         title: Text("Smart Attendance"),
-//         backgroundColor: Colors.cyan[700],
-//         foregroundColor: Colors.white,
-//       ),
+//       appBar: AppBar(title: Text("Smart Attendance"), backgroundColor: Colors.cyan[700], foregroundColor: Colors.white),
 //       body: Column(
 //         children: [
 //           Expanded(
 //             flex: 3,
 //             child: Stack(
 //               children: [
-//                 MobileScanner(
-//                   controller: scannerController,
-//                   onDetect: _onDetect,
-//                 ),
+//                 MobileScanner(controller: scannerController, onDetect: _onDetect),
 //                 Center(
 //                   child: Container(
-//                     width: 240,
-//                     height: 240,
+//                     width: 240, height: 240,
 //                     decoration: BoxDecoration(
-//                       border: Border.all(
-//                         color: _detectedStudent == null
-//                             ? Colors.white
-//                             : Colors.greenAccent,
-//                         width: 4,
-//                       ),
+//                       border: Border.all(color: _detectedStudent == null ? Colors.white : Colors.greenAccent, width: 4),
 //                       borderRadius: BorderRadius.circular(24),
 //                     ),
 //                   ),
@@ -200,31 +183,20 @@
 //             flex: 2,
 //             child: Container(
 //               padding: EdgeInsets.all(24),
-//               decoration: BoxDecoration(
-//                 color: Colors.white,
-//                 borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-//               ),
+//               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
 //               child: Column(
 //                 mainAxisAlignment: MainAxisAlignment.center,
 //                 children: [
 //                   if (_isProcessing) CircularProgressIndicator(),
 //                   SizedBox(height: 10),
-//                   Text(
-//                     _statusMessage,
-//                     textAlign: TextAlign.center,
-//                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-//                   ),
+//                   Text(_statusMessage, textAlign: TextAlign.center, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
 //                   if (_detectedStudent == null && !_isProcessing) ...[
 //                     SizedBox(height: 20),
 //                     ElevatedButton.icon(
 //                       onPressed: _pickQRFromGallery,
 //                       icon: Icon(Icons.image),
 //                       label: Text("Pick Image from Gallery"),
-//                       style: ElevatedButton.styleFrom(
-//                         backgroundColor: Colors.cyan[700],
-//                         foregroundColor: Colors.white,
-//                         minimumSize: Size(250, 50),
-//                       ),
+//                       style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan[700], foregroundColor: Colors.white, minimumSize: Size(250, 50)),
 //                     ),
 //                   ],
 //                 ],
@@ -242,12 +214,6 @@
 
 
 
-
-////////////////////////////////////////////////
-///
-///
-///
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -256,6 +222,7 @@ import '../services/api_service.dart';
 import '../models/student_model.dart';
 import '../services/face_embedding_service.dart'; // Import service
 import 'camera_capture_page.dart'; // Import face scan page
+//import '../theme/app_colors.dart';
 
 class MarkAttendancePage2 extends StatefulWidget {
   @override
@@ -265,7 +232,8 @@ class MarkAttendancePage2 extends StatefulWidget {
 class _MarkAttendancePageState extends State<MarkAttendancePage2> {
   final MobileScannerController scannerController = MobileScannerController();
   final ImagePicker _picker = ImagePicker();
-  final FaceEmbeddingService _embeddingService = FaceEmbeddingService(); // Initialize service
+  final FaceEmbeddingService _embeddingService =
+      FaceEmbeddingService(); // Initialize service
 
   bool _isProcessing = false;
   String _statusMessage = "Step 1: Scan QR or Pick Gallery Image";
@@ -330,9 +298,13 @@ class _MarkAttendancePageState extends State<MarkAttendancePage2> {
         }
 
         // Compare the face from camera with the one in DB
-        double distance = _embeddingService.compareFaces(liveEmbedding, student.faceEmbedding!);
-        
-        if (distance < 0.75) { // Match found!
+        double distance = _embeddingService.compareFaces(
+          liveEmbedding,
+          student.faceEmbedding!,
+        );
+
+        if (distance < 0.75) {
+          // Match found!
           bool marked = await ApiService.markPresent(student.id!);
           if (marked) {
             _showSuccessDialog(student.name);
@@ -378,7 +350,9 @@ class _MarkAttendancePageState extends State<MarkAttendancePage2> {
     });
 
     try {
-      final BarcodeCapture? capture = await scannerController.analyzeImage(image.path);
+      final BarcodeCapture? capture = await scannerController.analyzeImage(
+        image.path,
+      );
       if (capture != null && capture.barcodes.isNotEmpty) {
         final String? code = capture.barcodes.first.rawValue?.trim();
         if (code != null) _processStudentAttendance(code);
@@ -397,9 +371,21 @@ class _MarkAttendancePageState extends State<MarkAttendancePage2> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Icon(Icons.check_circle, color: Colors.green, size: 80),
-        content: Text("Success!\n$name marked present", textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        content: Text(
+          "Success!\n$name marked present",
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         actions: [
-          Center(child: ElevatedButton(onPressed: () { Navigator.pop(ctx); _resetScanner(); }, child: Text("Done")))
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _resetScanner();
+              },
+              child: Text("Done"),
+            ),
+          ),
         ],
       ),
     );
@@ -407,48 +393,168 @@ class _MarkAttendancePageState extends State<MarkAttendancePage2> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(title: Text("Smart Attendance"), backgroundColor: Colors.cyan[700], foregroundColor: Colors.white),
+      appBar: AppBar(
+        title: Text("Smart Attendance"),
+        backgroundColor: Colors.cyan[700],
+        foregroundColor: Colors.white,
+        centerTitle: true,
+      ),
       body: Column(
         children: [
+          // Scanner section
           Expanded(
             flex: 3,
             child: Stack(
               children: [
-                MobileScanner(controller: scannerController, onDetect: _onDetect),
+                // Camera / QR Scanner
+                MobileScanner(
+                  controller: scannerController,
+                  onDetect: _onDetect,
+                ),
+
+                // Overlay box with dynamic border
                 Center(
                   child: Container(
-                    width: 240, height: 240,
+                    width: size.width * 0.5,
+                    height: size.width * 0.5,
                     decoration: BoxDecoration(
-                      border: Border.all(color: _detectedStudent == null ? Colors.white : Colors.greenAccent, width: 4),
+                      border: Border.all(
+                        color: _detectedStudent == null
+                            ? Colors.white70
+                            : Colors.greenAccent,
+                        width: 4,
+                      ),
                       borderRadius: BorderRadius.circular(24),
                     ),
                   ),
                 ),
+
+                // Instruction overlay
+                Positioned(
+                  top: 20,
+                  left: 0,
+                  right: 0,
+                  child: Column(
+                    children: [
+                      Text(
+                        "📌 Align QR Code or Student ID inside the box",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 4,
+                              color: Colors.black45,
+                              offset: Offset(1, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "Ensure good lighting for quick scan",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        "Step 1: Scan QR → Step 2: Face Verification",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+                // Add this inside the Stack
+Positioned(
+  bottom: 10,
+  right: 20,
+  child: FloatingActionButton(
+    mini: true,
+    backgroundColor: Colors.cyan[700],
+    onPressed: () => scannerController.switchCamera(),
+    child: const Icon(Icons.flip_camera_ios, color: Colors.white),
+  ),
+),
               ],
             ),
           ),
+
+          // Status & controls
           Expanded(
             flex: 2,
             child: Container(
+              width: double.infinity,
               padding: EdgeInsets.all(24),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, -3),
+                  ),
+                ],
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (_isProcessing) CircularProgressIndicator(),
-                  SizedBox(height: 10),
-                  Text(_statusMessage, textAlign: TextAlign.center, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                  if (_detectedStudent == null && !_isProcessing) ...[
-                    SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: _pickQRFromGallery,
-                      icon: Icon(Icons.image),
-                      label: Text("Pick Image from Gallery"),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.cyan[700], foregroundColor: Colors.white, minimumSize: Size(250, 50)),
+                  // Status / feedback
+                  if (_isProcessing)
+                    Column(
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.cyan[700]!,
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          _statusMessage,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Column(
+                      children: [
+                        Text(
+                          _statusMessage,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        // Gallery pick button
+                        if (_detectedStudent == null)
+                          ElevatedButton.icon(
+                            onPressed: _pickQRFromGallery,
+                            icon: Icon(Icons.image),
+                            label: Text("Pick QR from Gallery"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.cyan[700],
+                              foregroundColor: Colors.white,
+                              minimumSize: Size(size.width * 0.6, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  ],
                 ],
               ),
             ),
@@ -458,7 +564,3 @@ class _MarkAttendancePageState extends State<MarkAttendancePage2> {
     );
   }
 }
-
-
-
-
