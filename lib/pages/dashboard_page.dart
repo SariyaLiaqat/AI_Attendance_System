@@ -198,70 +198,76 @@ class _AttendanceDashboardState extends State<AttendanceDashboard> {
   }
 
   Widget _buildSummaryRow(Map<String, dynamic> stats) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: _cardDecoration(),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+  // Logic: Extract values safely. If they are null, use 0.
+  // Also handle cases where Node.js might send them as Strings.
+  int total = int.tryParse(stats['total'].toString()) ?? 0;
+  int present = int.tryParse(stats['presentCount'].toString()) ?? 0;
+  int absent = total - present;
+
+  return Container(
+    padding: const EdgeInsets.all(16),
+    decoration: _cardDecoration(),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _summaryCircle(
+          "${stats['presentPercent'] ?? 0}%",
+          "PRESENT",
+          Colors.green,
+          "$present/$total",
+        ),
+        _summaryCircle(
+          "${stats['absentPercent'] ?? 0}%",
+          "ABSENT",
+          Colors.red,
+          "$absent/$total",
+        ),
+      ],
+    ),
+  );
+}
+
+ Widget _summaryCircle(
+  String percent,
+  String label,
+  Color color,
+  String count,
+) {
+  // Logic: Clean the string and try to parse it
+  final String cleanPercent = percent.replaceAll('%', '').trim();
+  final double value = double.tryParse(cleanPercent) ?? 0.0;
+
+  return Column(
+    children: [
+      Stack(
+        alignment: Alignment.center,
         children: [
-          _summaryCircle(
-            "${stats['presentPercent']}%",
-            "PRESENT",
-            Colors.green,
-            "${stats['presentCount']}/${stats['total']}",
+          SizedBox(
+            width: 70,
+            height: 70,
+            child: CircularProgressIndicator(
+              // Safe division by 100
+              value: value / 100, 
+              strokeWidth: 8,
+              backgroundColor: Colors.grey[200],
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
           ),
-          _summaryCircle(
-            "${stats['absentPercent']}%",
-            "ABSENT",
-            Colors.red,
-            "${stats['total'] - stats['presentCount']}/${stats['total']}",
+          Text(
+            "$value%", // Displayed safely
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _summaryCircle(
-    String percent,
-    String label,
-    Color color,
-    String count,
-  ) {
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 70,
-              height: 70,
-              child: CircularProgressIndicator(
-                value: double.parse(percent.replaceAll('%', '')) / 100,
-                strokeWidth: 8,
-                backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(color),
-              ),
-            ),
-            Text(
-              percent,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: 10,
-          ),
-        ),
-        Text(count, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-      ],
-    );
-  }
-
+      const SizedBox(height: 8),
+      Text(
+        label,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 10),
+      ),
+      Text(count, style: const TextStyle(color: Colors.grey, fontSize: 10)),
+    ],
+  );
+}
   Widget _buildActivityList(List<dynamic> activities) {
     return Container(
       padding: const EdgeInsets.all(12),

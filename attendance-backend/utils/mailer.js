@@ -8,7 +8,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-async function sendAttendanceEmail(parentEmail, studentName) {
+async function sendAttendanceEmail(parentEmail, studentName, status) {
     const today = new Date().toDateString();
 
     const dailyMessages = [
@@ -18,14 +18,16 @@ async function sendAttendanceEmail(parentEmail, studentName) {
         "Your cooperation helps us maintain academic excellence.",
     ];
 
-    // 🎲 Random daily message
-    const extraMessage =
-        dailyMessages[Math.floor(Math.random() * dailyMessages.length)];
+    const extraMessage = dailyMessages[Math.floor(Math.random() * dailyMessages.length)];
+
+    // Color and text based on status
+    const color = status === 'Present' ? '#2ECC71' : '#E74C3C';
+    const statusText = status;
 
     const mailOptions = {
         from: '"Punjab College Chichawatni" <workingera009@gmail.com>',
         to: parentEmail,
-        subject: 'Student Attendance Confirmation',
+        subject: `Student Attendance Confirmation - ${statusText}`,
         html: `
             <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #2D3436;">
                 <h2 style="color: #0FB9B1;">Punjab College, Chichawatni</h2>
@@ -36,7 +38,7 @@ async function sendAttendanceEmail(parentEmail, studentName) {
                 <p>
                     This is to inform you that your child,
                     <strong>${studentName}</strong>,
-                    has been marked <strong style="color: #2ECC71;">Present</strong>
+                    has been marked <strong style="color: ${color};">${statusText}</strong>
                     today.
                 </p>
 

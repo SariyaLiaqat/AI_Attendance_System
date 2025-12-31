@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attendance Reports | AI System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <link rel="stylesheet" href="css/reports.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="logo-circle">🎓</div></div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="index.html">DASHBOARD</a></li>
+                <li><a href="manual.html">ATTENDANCE</a></li>
+                <li class="active"><a href="reports.html">REPORTS</a></li>
+                <li><a href="students.html">STUDENTS</a></li>
+                <li><a href="classes.html">CLASSES</a></li>
+                <li><a href="#">SETTINGS</a></li>
+            </ul>
+        </nav>
+       
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-icon">📈</div>
+                <h1>ATTENDANCE ANALYTICS & REPORTS</h1>
+            </div>
+            <div class="report-actions">
+                <button class="export-btn" onclick="window.print()">Download PDF</button>
+            </div>
+        </header>
+
+        <section class="reports-grid">
+            <div class="report-card full-width">
+                <div class="card-header">
+                    <h2>Monthly Attendance Trend</h2>
+                    <select id="monthFilter"><option>Current Month</option></select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <h2>Class-wise Attendance (%)</h2>
+                <div class="chart-container">
+                    <canvas id="classComparisonChart"></canvas>
+                </div>
+            </div>
+
+            <div class="report-card">
+                <h2>At-Risk Students (Low Attendance)</h2>
+                <div class="table-wrapper">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Class</th>
+                                <th>Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="riskTable">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+<script src="js/api.js"></script>
+<script src="js/reports.js"></script>
+</body>
+</html>

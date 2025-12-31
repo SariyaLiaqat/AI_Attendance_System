@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Attendance Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-circle">🎓</div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active"><a href="#">DASHBOARD</a></li>
+                    <li><a href="manual.html">ATTENDANCE</a></li>
+                    <li class="icon-row">
+                        <span>✔️</span><span>✔️</span><span>📊</span>
+                    </li>
+                    <li><a href="reports.html">REPORTS</a></li>
+                    <li><a href="students.html">STUDENTS</a></li>
+                    <li><a href="classes.html">CLASSES</a></li>
+                    <li><a href="#">SETTINGS</a></li>
+                </ul>
+            </nav>
+            
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="brand">
+                    <div class="brand-icon">📖</div>
+                    <h1>STUDENT ATTENDANCE SYSTEM</h1>
+                </div>
+                <div class="user-profile">
+                    <span id="todayDate" style="margin-right: 15px; font-size: 0.9rem;"></span>
+                    <div class="user-avatar">👤</div>
+                    <span>Admin User</span>
+                </div>
+            </header>
+
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <h3>TOTAL STUDENTS</h3>
+                    <p class="stat-number" id="totalStudents">0</p>
+                    <span class="trend up" id="totalTrend">▲ 0% last month</span>
+                </div>
+                <div class="stat-card">
+                    <h3>PRESENT TODAY</h3>
+                    <p class="stat-number" id="presentToday">0</p>
+                    <span class="status-check">✅</span>
+                </div>
+                <div class="stat-card">
+                    <h3>ABSENT TODAY</h3>
+                    <p class="stat-number" id="absentToday">0</p>
+                    <span class="trend down" id="absentTrend">▼ 0% last month</span>
+                </div>
+            </section>
+
+            <section class="overview-section">
+                <div class="overview-header">
+                    <h2>DAILY ATTENDANCE OVERVIEW</h2>
+                </div>
+                <div class="overview-content">
+                    <div class="chart-container">
+                        <canvas id="attendanceChart"></canvas>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>STUDENT NAME</th>
+                                    <th>STATUS</th>
+                                    <th>TIME</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityTable">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- <section class="quick-actions">
+                <h2>QUICK ACTIONS</h2>
+                <div class="action-buttons">
+                    <button class="action-btn">MARK LATE</button>
+                    <button class="action-btn">VIEW ABSENTEES</button>
+                    <button class="action-btn">GENERATE REPORT</button>
+                </div>
+            </section> -->
+        </main>
+    </div>
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
+

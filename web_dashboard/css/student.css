@@ -1,0 +1,81 @@
+/* student.css */
+
+.profile-header-card {
+    background: var(--navy);
+    color: white;
+    padding: 30px;
+    border-radius: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(26, 42, 68, 0.2);
+}
+
+.profile-info-main { display: flex; align-items: center; gap: 20px; }
+
+.large-avatar {
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px;
+}
+
+.badge {
+    background: #48bb78;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+}
+
+.header-stats { display: flex; gap: 40px; }
+.h-stat { display: flex; flex-direction: column; text-align: right; }
+.h-stat span { font-size: 10px; color: #a0aec0; letter-spacing: 1px; }
+.h-stat strong { font-size: 24px; }
+
+/* Tabs */
+.tabs-container {
+    display: flex; gap: 10px; margin-bottom: 20px;
+    background: #e2e8f0; padding: 5px; border-radius: 15px; width: fit-content;
+}
+
+.tab-link {
+    border: none; padding: 10px 25px; border-radius: 12px;
+    cursor: pointer; font-weight: 600; background: transparent;
+    transition: 0.3s; color: var(--navy);
+}
+
+.tab-link.active { background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+/* Tab Content Visibility */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Analytics Grid */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.content-card {
+    background: white; padding: 25px; border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+}
+
+.card-title {
+    font-weight: 700; color: var(--navy); font-size: 14px;
+    margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.chart-wrapper {
+    height: 250px; /* Controls chart size */
+    position: relative;
+}
+
+.modern-table { width: 100%; border-collapse: collapse; }
+.modern-table th { text-align: left; padding: 12px; font-size: 12px; color: var(--text-muted); border-bottom: 2px solid #f1f5f9; }
+.modern-table td { padding: 15px 12px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }

@@ -1,0 +1,167 @@
+/* manual.css */
+
+.manual-header {
+    background: var(--navy);
+    padding: 20px 30px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 20px rgba(26, 42, 68, 0.2);
+}
+
+.header-left { display: flex; align-items: center; gap: 20px; }
+
+.back-btn {
+    text-decoration: none;
+    color: white;
+    background: rgba(255,255,255,0.1);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 20px;
+    transition: 0.3s;
+}
+
+.back-btn:hover { background: white; color: var(--navy); }
+
+.submit-btn {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+    padding: 10px 25px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.submit-btn:hover { background: white; color: var(--navy); }
+
+/* Filter Card */
+.filter-card {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+}
+
+.filter-group label {
+    font-weight: 700;
+    color: var(--navy);
+    margin-right: 15px;
+}
+
+.filter-group select {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    min-width: 200px;
+    outline: none;
+}
+
+.date-display {
+    color: var(--text-muted);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Table Card */
+.attendance-table-card {
+    background: white;
+    border-radius: 25px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+}
+
+.modern-table { width: 100%; border-collapse: collapse; }
+
+.modern-table th {
+    padding: 15px;
+    text-align: left;
+    background: #f8fafc;
+    color: var(--navy);
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 1px;
+}
+
+.modern-table td {
+    padding: 18px 15px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.center { text-align: center !important; }
+
+/* Custom Checkbox Styling */
+input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    accent-color: #48bb78; /* Green for present */
+}
+
+input[type="checkbox"].absent-check {
+    accent-color: #f56565; /* Red for absent */
+}
+
+/* Row Hover */
+.modern-table tr:hover {
+    background: #f1f5f9;
+}
+
+
+
+
+
+/* Lock the container to the screen height */
+.dashboard-container {
+    display: flex;
+    height: 100vh; /* Full screen height */
+    overflow: hidden; /* Prevent body from scrolling */
+    padding: 20px;
+    gap: 20px;
+}
+
+/* Sidebar stays fixed */
+.sidebar {
+    width: 240px;
+    height: calc(100vh - 40px); /* Fill container height minus padding */
+    background: var(--navy);
+    border-radius: 25px;
+    display: flex;
+    flex-direction: column;
+    padding: 30px 15px;
+    flex-shrink: 0; /* Don't let sidebar shrink */
+}
+
+/* Main content gets its own scrollbar */
+.main-content {
+    flex: 1;
+    height: calc(100vh - 40px);
+    overflow-y: auto; /* Enable vertical scrolling for table only */
+    padding-right: 10px; /* Space for scrollbar */
+}
+
+/* Custom Scrollbar for a "Wow" look */
+.main-content::-webkit-scrollbar {
+    width: 6px;
+}
+.main-content::-webkit-scrollbar-thumb {
+    background: rgba(26, 42, 68, 0.2);
+    border-radius: 10px;
+}
